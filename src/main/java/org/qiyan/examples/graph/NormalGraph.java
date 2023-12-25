@@ -16,8 +16,11 @@ public class NormalGraph {
         String aVal = task("a", "root");
         //(b,c)
         List<Future<String>> futures = new ArrayList<>(2);
-        futures.add(executorService.submit(() -> task("b", aVal)));
-        futures.add(executorService.submit(() -> task("c", aVal)));
+        for (int i = 0; i < 3; i++) {
+            int finalI = i;
+            futures.add(executorService.submit(() -> task("b-" + finalI, aVal)));
+            futures.add(executorService.submit(() -> task("c-" + finalI, aVal)));
+        }
         List<String> strings = new ArrayList<>(2);
         for (Future<String> future : futures) {
             strings.add(future.get());

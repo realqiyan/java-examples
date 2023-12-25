@@ -20,8 +20,15 @@ public class FlowApiGraph {
 
         long start = System.currentTimeMillis();
         SubmissionPublisher<String> a = new SubmissionPublisher<>();
-        AsyncMapProcessor<String, String> b = new AsyncMapProcessor<>(input -> task("b", input));
-        AsyncMapProcessor<String, String> c = new AsyncMapProcessor<>(input -> task("c", input));
+
+        List<AsyncMapProcessor<String, String>> processors = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            int finalI = i;
+            AsyncMapProcessor<String, String> b = new AsyncMapProcessor<>(input -> task("b-" + finalI, input));
+            AsyncMapProcessor<String, String> c = new AsyncMapProcessor<>(input -> task("c-" + finalI, input));
+            processors.add(b);
+            processors.add(c);
+        }
         AsyncMapProcessor<List<String>, String> d = new AsyncMapProcessor<>(input -> task("d", input.toString()));
         FinalProcessor<String> print = new FinalProcessor<>(new Consumer<String>() {
             @Override
@@ -31,12 +38,12 @@ public class FlowApiGraph {
             }
         });
 
-        MergeProcessor merge = new MergeProcessor(2);
+        MergeProcessor merge = new MergeProcessor(processors.size());
+        for(AsyncMapProcessor<String, String> processor:processors){
+            a.subscribe(processor);
+            processor.subscribe(merge);
+        }
 
-        a.subscribe(b);
-        a.subscribe(c);
-        b.subscribe(merge);
-        c.subscribe(merge);
         merge.subscribe(d);
         d.subscribe(print);
 
@@ -47,6 +54,6 @@ public class FlowApiGraph {
 
     private static CompletableFuture<String> task(String taskName, String depend) {
         CompletableFuture<String> query = TASK.query("http://127.0.0.1:8080/sleep?timeout=1000");
-        return query.thenApply((taskVal)-> "(from:" + taskName + "-" + taskVal + "-" + Thread.currentThread().getName() + ",depend:" + depend + ")");
+        return query.thenApply((taskVal) -> "(from:" + taskName + "-" + taskVal + "-" + Thread.currentThread().getName() + ",depend:" + depend + ")");
     }
 }
