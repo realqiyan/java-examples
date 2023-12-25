@@ -19,10 +19,10 @@ public class HelloWorld {
 
     private static void reactorFlow() {
         Mono<String> root = Mono.just("(from:a-" + Thread.currentThread().getName() + ")");
-        Mono<String> b = root.flatMap(input -> Mono.fromCallable(() -> "(from:" + "b-" + Thread.currentThread().getName() + ",dept:" + input + ")"));
-        Mono<String> c = root.flatMap(input -> Mono.fromCallable(() -> "(from:" + "c-" + Thread.currentThread().getName() + ",dept:" + input + ")"));
+        Mono<String> b = root.flatMap(input -> Mono.fromCallable(() -> "(from:" + "b-" + Thread.currentThread().getName() + ",depend:" + input + ")"));
+        Mono<String> c = root.flatMap(input -> Mono.fromCallable(() -> "(from:" + "c-" + Thread.currentThread().getName() + ",depend:" + input + ")"));
         Mono<List<String>> merge = b.zipWith(c, (r1, r2) -> Arrays.asList(r1, r2));
-        Mono<String> d = merge.flatMap(input -> Mono.fromCallable(() -> "(from:" + "d-" + Thread.currentThread().getName() + ",dept:" + input + ")"));
+        Mono<String> d = merge.flatMap(input -> Mono.fromCallable(() -> "(from:" + "d-" + Thread.currentThread().getName() + ",depend:" + input + ")"));
         d.subscribe(System.out::println);
     }
 

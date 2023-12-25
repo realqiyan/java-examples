@@ -14,8 +14,13 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 public class WebConfiguration {
 
     @Bean
-    public RouterFunction<ServerResponse> route(ExampleWebHandler handler) {
+    public RouterFunction<ServerResponse> home(ExampleWebHandler handler) {
         return RouterFunctions.route(GET("/").and(accept(MediaType.APPLICATION_JSON)), handler::hello);
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> sleep(ExampleWebHandler handler) {
+        return RouterFunctions.route(GET("/sleep").and(accept(MediaType.APPLICATION_JSON)), handler::sleep);
     }
 
 }

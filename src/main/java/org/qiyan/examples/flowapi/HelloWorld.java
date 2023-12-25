@@ -17,9 +17,9 @@ public class HelloWorld {
 
     private static void flow() {
         SubmissionPublisher<String> root = new SubmissionPublisher<>();
-        MapProcessor<String, String> b = new MapProcessor<>(input -> "(from:" + "b-" + Thread.currentThread().getName() + ",dept:" + input + ")");
-        MapProcessor<String, String> c = new MapProcessor<>(input -> "(from:" + "c-" + Thread.currentThread().getName() + ",dept:" + input + ")");
-        MapProcessor<List<String>, String> d = new MapProcessor<>(input -> "(from:" + "d-" + Thread.currentThread().getName() + ",dept:" + input + ")");
+        MapProcessor<String, String> b = new MapProcessor<>(input -> "(from:" + "b-" + Thread.currentThread().getName() + ",depend:" + input + ")");
+        MapProcessor<String, String> c = new MapProcessor<>(input -> "(from:" + "c-" + Thread.currentThread().getName() + ",depend:" + input + ")");
+        MapProcessor<List<String>, String> d = new MapProcessor<>(input -> "(from:" + "d-" + Thread.currentThread().getName() + ",depend:" + input + ")");
         FinalProcessor<String> print = new FinalProcessor<>(System.out::println);
 
         MergeProcessor merge = new MergeProcessor(2);

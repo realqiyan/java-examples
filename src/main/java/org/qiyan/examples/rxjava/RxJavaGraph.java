@@ -21,7 +21,7 @@ public class RxJavaGraph {
             return Observable.fromCallable(() -> {
                 // 模拟耗时操作
                 TimeUnit.MILLISECONDS.sleep(100);
-                return "(from:" + "b-" + Thread.currentThread().getName() + ",dept:" + input + ")";
+                return "(from:" + "b-" + Thread.currentThread().getName() + ",depend:" + input + ")";
             }).subscribeOn(Schedulers.computation()); // 使用computation调度器并发执行
         });
 
@@ -30,7 +30,7 @@ public class RxJavaGraph {
             return Observable.fromCallable(() -> {
                 // 模拟耗时操作
                 TimeUnit.MILLISECONDS.sleep(100);
-                return "(from:" + "c-" + Thread.currentThread().getName() + ",dept:" + input + ")";
+                return "(from:" + "c-" + Thread.currentThread().getName() + ",depend:" + input + ")";
             }).subscribeOn(Schedulers.computation()); // 使用computation调度器并发执行
         });
 
@@ -38,7 +38,7 @@ public class RxJavaGraph {
         Observable<String> nodeD = Observable.zip(nodeB, nodeC, (b, c) -> {
             // 模拟耗时操作
             TimeUnit.MILLISECONDS.sleep(100);
-            return "(from:" + "d-" + Thread.currentThread().getName() + ",dept:" + List.of(b, c) + ")";
+            return "(from:" + "d-" + Thread.currentThread().getName() + ",depend:" + List.of(b, c) + ")";
         }).subscribeOn(Schedulers.computation()); // 使用computation调度器并发执行
 
         // 订阅并执行整个执行图
