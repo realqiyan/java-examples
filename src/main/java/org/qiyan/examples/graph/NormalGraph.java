@@ -6,36 +6,41 @@ import java.util.concurrent.*;
 
 public class NormalGraph {
 
-    private static ExecutorService executorService = Executors.newFixedThreadPool(1);
+    private static ExecutorService executor = Executors.newFixedThreadPool(32);
 
-    private static AsyncTask TASK = new AsyncTask();
+    private AsyncTask task = new AsyncTask();
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
+        //a->(b1,b2,b3...)->c
+        //        String url = "http://127.0.0.1:8080/sleep?timeout=1000";
+        String url = "http://gw.alicdn.com/tfs/TB176rg4VP7gK0jSZFjXXc5aXXa-286-118.png";
+        new NormalGraph().exec(url);
+    }
+
+    private void exec(String url) throws ExecutionException, InterruptedException {
         long start = System.currentTimeMillis();
         //a
-        String aVal = task("a", "root");
-        //(b,c)
-        List<Future<String>> futures = new ArrayList<>(2);
-        for (int i = 0; i < 3; i++) {
-            int finalI = i;
-            futures.add(executorService.submit(() -> task("b-" + finalI, aVal)));
-            futures.add(executorService.submit(() -> task("c-" + finalI, aVal)));
-        }
-        List<String> strings = new ArrayList<>(2);
-        for (Future<String> future : futures) {
-            strings.add(future.get());
-        }
-        //d
-        String dVal = task("d", strings.toString());
+        NodeResult aVal = task.sync("a", url, null);
         long cost = System.currentTimeMillis() - start;
-        System.out.println("耗时:" + cost + ",最终结果:" + dVal);
-        TASK.close();
-
+        System.out.println("耗时:" + cost);
+        //(b1,b2,b3...)
+        List<Future<NodeResult>> futures = new ArrayList<>();
+        for (int i = 1; i <= 1000; i++) {
+            int finalI = i;
+            futures.add(executor.submit(() -> task.sync("b-" + finalI, url, List.of(aVal))));
+        }
+        List<NodeResult> results = new ArrayList<>();
+        for (Future<NodeResult> future : futures) {
+            results.add(future.get());
+        }
+        cost = System.currentTimeMillis() - start;
+        System.out.println("耗时:" + cost);
+        //c
+        NodeResult cVal = task.sync("c", url, results);
+        cost = System.currentTimeMillis() - start;
+        System.out.println("耗时:" + cost + ",最终结果:" + cVal);
+        task.close();
     }
 
-    private static String task(String taskName, String depend) throws ExecutionException, InterruptedException {
-        CompletableFuture<String> task = TASK.query("http://127.0.0.1:8080/sleep?timeout=1000");
-        String taskVal = task.get();
-        return "(from:" + taskName + "-" + taskVal + "-" + Thread.currentThread().getName() + ",depend:" + depend + ")";
-    }
+
 }

@@ -22,7 +22,7 @@ public class AsyncMapProcessor<T, R> extends SubmissionPublisher<R> implements F
     @Override
     public void onSubscribe(Flow.Subscription subscription) {
         this.subscription = subscription;
-        subscription.request(1);
+        subscription.request(Long.MAX_VALUE);
     }
 
 
@@ -30,7 +30,7 @@ public class AsyncMapProcessor<T, R> extends SubmissionPublisher<R> implements F
     public void onNext(T item) {
         func.apply(item).thenAccept((result) -> {
             submit(result);
-            subscription.request(1);
+            subscription.request(Long.MAX_VALUE);
         });
     }
 

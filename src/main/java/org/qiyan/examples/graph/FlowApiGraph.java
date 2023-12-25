@@ -12,48 +12,46 @@ import java.util.function.Consumer;
 
 public class FlowApiGraph {
 
-    private static ExecutorService executorService = Executors.newFixedThreadPool(1);
+    private static ExecutorService executorService = ForkJoinPool.commonPool();
 
-    private static AsyncTask TASK = new AsyncTask();
+    private static AsyncTask task = new AsyncTask();
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
+//        String url = "http://127.0.0.1:8080/sleep?timeout=1000";
+        String url = "http://gw.alicdn.com/tfs/TB176rg4VP7gK0jSZFjXXc5aXXa-286-118.png";
+        new FlowApiGraph().exec(url);
+    }
 
+    private void exec(String url) throws ExecutionException, InterruptedException {
         long start = System.currentTimeMillis();
-        SubmissionPublisher<String> a = new SubmissionPublisher<>();
-
-        List<AsyncMapProcessor<String, String>> processors = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
+        // root节点a
+        SubmissionPublisher<NodeResult> a = new SubmissionPublisher<>();
+        // 节点b1,b2,b3...
+        List<AsyncMapProcessor<NodeResult, NodeResult>> processors = new ArrayList<>();
+        for (int i = 1; i <= 1000; i++) {
             int finalI = i;
-            AsyncMapProcessor<String, String> b = new AsyncMapProcessor<>(input -> task("b-" + finalI, input));
-            AsyncMapProcessor<String, String> c = new AsyncMapProcessor<>(input -> task("c-" + finalI, input));
-            processors.add(b);
-            processors.add(c);
+            processors.add(new AsyncMapProcessor<>(input -> task.async("b-" + finalI, url, List.of(input))));
         }
-        AsyncMapProcessor<List<String>, String> d = new AsyncMapProcessor<>(input -> task("d", input.toString()));
-        FinalProcessor<String> print = new FinalProcessor<>(new Consumer<String>() {
-            @Override
-            public void accept(String s) {
-                long cost = System.currentTimeMillis() - start;
-                System.out.println("耗时:" + cost + ",最终结果:" + s);
-            }
+        // 节点c
+        AsyncMapProcessor<List<NodeResult>, NodeResult> c = new AsyncMapProcessor<>(input -> task.async("c", url, input));
+        // 输出节点
+        FinalProcessor<NodeResult> print = new FinalProcessor<>(s -> {
+            long cost = System.currentTimeMillis() - start;
+            System.out.println("耗时:" + cost + ",最终结果:" + s);
+            task.close();
         });
-
+        // 连接节点
         MergeProcessor merge = new MergeProcessor(processors.size());
-        for(AsyncMapProcessor<String, String> processor:processors){
+
+        // 创建连接
+        for (AsyncMapProcessor<NodeResult, NodeResult> processor : processors) {
             a.subscribe(processor);
             processor.subscribe(merge);
         }
-
-        merge.subscribe(d);
-        d.subscribe(print);
-
-        a.submit(task("a", "root").get());
-
-
+        merge.subscribe(c);
+        c.subscribe(print);
+        // 提交任务
+        a.submit(task.async("a", url, null).get());
     }
 
-    private static CompletableFuture<String> task(String taskName, String depend) {
-        CompletableFuture<String> query = TASK.query("http://127.0.0.1:8080/sleep?timeout=1000");
-        return query.thenApply((taskVal) -> "(from:" + taskName + "-" + taskVal + "-" + Thread.currentThread().getName() + ",depend:" + depend + ")");
-    }
 }

@@ -1,46 +1,49 @@
 package org.qiyan.examples.flowapi;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 /**
  * Merge自定义处理类
  */
+@Slf4j
 public class MergeProcessor extends SubmissionPublisher implements Flow.Processor {
-    private int count;
+    private final int total;
 
     private List<Object> result;
     private Flow.Subscription subscription;
 
-
-    public MergeProcessor(int count) {
-        this.count = count;
-        this.result = new ArrayList<>(count);
+    public MergeProcessor(int total) {
+        this.total = total;
+        this.result = new CopyOnWriteArrayList<>();
     }
 
     @Override
     public void onSubscribe(Flow.Subscription subscription) {
         this.subscription = subscription;
-        subscription.request(1);
+        subscription.request(Long.MAX_VALUE);
     }
-
 
     @Override
     public void onNext(Object item) {
-        count--;
         result.add(item);
-        if (count <= 0) {
+        //log.info("merge:{}/{}", result.size(), total);
+        if (result.size() == total) {
             submit(result);
         }
-        subscription.request(1);
+        subscription.request(Long.MAX_VALUE);
     }
 
     @Override
     public void onError(Throwable throwable) {
-        throwable.printStackTrace();
+        log.error("MergeProcessor onError: {}", throwable.getMessage(), throwable);
     }
 
     @Override

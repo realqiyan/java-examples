@@ -21,7 +21,7 @@ public class MapProcessor<T, R> extends SubmissionPublisher<R> implements Flow.P
     @Override
     public void onSubscribe(Flow.Subscription subscription) {
         this.subscription = subscription;
-        subscription.request(1);
+        subscription.request(Long.MAX_VALUE);
     }
 
 
@@ -29,7 +29,7 @@ public class MapProcessor<T, R> extends SubmissionPublisher<R> implements Flow.P
     public void onNext(T item) {
         R result = func.apply(item);
         submit(result);
-        subscription.request(1);
+        subscription.request(Long.MAX_VALUE);
     }
 
     @Override
