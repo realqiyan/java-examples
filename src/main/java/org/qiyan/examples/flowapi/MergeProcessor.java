@@ -16,13 +16,15 @@ import java.util.function.Function;
  */
 @Slf4j
 public class MergeProcessor extends SubmissionPublisher implements Flow.Processor {
-    private AtomicBoolean finish = new AtomicBoolean(false);
-    private int total;
+    private final int total;
+    private AtomicBoolean finish;
     private List<Object> result;
     private Flow.Subscription subscription;
+
     public MergeProcessor(int total) {
         this.total = total;
         this.result = new CopyOnWriteArrayList<>();
+        this.finish = new AtomicBoolean(false);
     }
 
     @Override
@@ -48,6 +50,8 @@ public class MergeProcessor extends SubmissionPublisher implements Flow.Processo
 
     @Override
     public void onComplete() {
+        this.result.clear();
+        this.finish.set(false);
         close();
     }
 }
