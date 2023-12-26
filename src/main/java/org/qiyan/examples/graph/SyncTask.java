@@ -12,10 +12,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 @Slf4j
 public class SyncTask {
@@ -31,6 +28,19 @@ public class SyncTask {
         } catch (Exception e) {
             return e.getMessage();
         }
+
+//        try {
+//            return executor.submit(() -> {
+//                try {
+//                    TimeUnit.MILLISECONDS.sleep(30);
+//                    return "now:" + System.currentTimeMillis();
+//                } catch (InterruptedException e) {
+//                    return e.getMessage();
+//                }
+//            }).get();
+//        } catch (Exception e) {
+//            return e.getMessage();
+//        }
     }
 
     public NodeResult sync(String taskName, String url, List<NodeResult> depends) {

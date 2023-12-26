@@ -1,6 +1,7 @@
 package org.qiyan.examples.flowapi;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.function.Function;
@@ -15,7 +16,8 @@ public class AsyncMapProcessor<T, R> extends SubmissionPublisher<R> implements F
     private Function<T, CompletableFuture<R>> func;
     private Flow.Subscription subscription;
 
-    public AsyncMapProcessor(Function<T, CompletableFuture<R>> func) {
+    public AsyncMapProcessor(ExecutorService executor, Function<T, CompletableFuture<R>> func) {
+        super(executor, 10);
         this.func = func;
     }
 

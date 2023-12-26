@@ -14,7 +14,7 @@ public class NormalGraph {
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         //a->(b1,b2,b3...)->c
         //        String url = "http://127.0.0.1:8080/sleep?timeout=1000";
-        String url = "http://gw.alicdn.com/tfs/TB176rg4VP7gK0jSZFjXXc5aXXa-286-118.png";
+        String url = "https://vv.video.qq.com/checktime?otype=json";
         new NormalGraph().exec(url);
         executor.shutdown();
     }
@@ -31,7 +31,7 @@ public class NormalGraph {
         //(b1,b2,b3...)
         List<Future<NodeResult>> futures = new ArrayList<>();
 
-        for (int i = 1; i <= 3000; i++) {
+        for (int i = 1; i <= 300; i++) {
             int finalI = i;
             futures.add(executor.submit(() -> task.sync("b-" + finalI, url, List.of(aVal))));
         }

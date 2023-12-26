@@ -13,10 +13,11 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class FlowApiGraph {
+    private static ExecutorService executor = Executors.newFixedThreadPool(10);
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
 //        String url = "http://127.0.0.1:8080/sleep?timeout=1000";
-        String url = "http://gw.alicdn.com/tfs/TB176rg4VP7gK0jSZFjXXc5aXXa-286-118.png";
+        String url = "https://vv.video.qq.com/checktime?otype=json";
         new FlowApiGraph().exec(url);
     }
 
@@ -27,15 +28,15 @@ public class FlowApiGraph {
 
         long start = System.currentTimeMillis();
         // root节点a
-        SubmissionPublisher<NodeResult> a = new SubmissionPublisher<>();
+        SubmissionPublisher<NodeResult> a = new SubmissionPublisher<>(executor, 10);
         // 节点b1,b2,b3...
         List<AsyncMapProcessor<NodeResult, NodeResult>> processors = new ArrayList<>();
-        for (int i = 1; i <= 3000; i++) {
+        for (int i = 1; i <= 300; i++) {
             int finalI = i;
-            processors.add(new AsyncMapProcessor<>(input -> task.async("b-" + finalI, url, List.of(input))));
+            processors.add(new AsyncMapProcessor<>(executor, input -> task.async("b-" + finalI, url, List.of(input))));
         }
         // 节点c
-        AsyncMapProcessor<List<NodeResult>, NodeResult> c = new AsyncMapProcessor<>(input -> {
+        AsyncMapProcessor<List<NodeResult>, NodeResult> c = new AsyncMapProcessor<>(executor, input -> {
             log.info("merge耗时:{}", System.currentTimeMillis() - start);
             return task.async("c", url, input);
         });
@@ -43,9 +44,10 @@ public class FlowApiGraph {
         FinalProcessor<NodeResult> print = new FinalProcessor<>(s -> {
             log.info("final耗时:{},最终结果:{}", System.currentTimeMillis() - start, s.getDepends().size());
             task.close();
+            executor.shutdown();
         });
         // 连接节点
-        MergeProcessor merge = new MergeProcessor(processors.size());
+        MergeProcessor merge = new MergeProcessor(executor, processors.size());
 
         // 创建连接
         for (AsyncMapProcessor<NodeResult, NodeResult> processor : processors) {

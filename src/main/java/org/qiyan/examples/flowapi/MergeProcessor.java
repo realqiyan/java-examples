@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,7 +22,8 @@ public class MergeProcessor extends SubmissionPublisher implements Flow.Processo
     private List<Object> result;
     private Flow.Subscription subscription;
 
-    public MergeProcessor(int total) {
+    public MergeProcessor(ExecutorService executor, int total) {
+        super(executor, 10);
         this.total = total;
         this.result = new CopyOnWriteArrayList<>();
         this.finish = new AtomicBoolean(false);
