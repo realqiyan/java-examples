@@ -4,13 +4,13 @@ import com.alibaba.fastjson2.JSON;
 
 import java.util.List;
 
-public class NodeResult {
+public class NodeResult<T> {
     private final String threadName;
     private final String nodeName;
-    private final Object value;
+    private final T value;
     private final List<NodeResult> depends;
 
-    public NodeResult(String nodeName, Object value, List<NodeResult> depends) {
+    public NodeResult(String nodeName, T value, List<NodeResult> depends) {
         this.nodeName = nodeName;
         this.value = value;
         this.depends = depends;
@@ -25,7 +25,7 @@ public class NodeResult {
         return nodeName;
     }
 
-    public Object getValue() {
+    public T getValue() {
         return value;
     }
 

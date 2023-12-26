@@ -10,12 +10,17 @@ import java.util.concurrent.ExecutionException;
 
 @Slf4j
 public class AsyncTask {
-    private AsyncHttpClient client = Dsl.asyncHttpClient();
+    private AsyncHttpClient client = Dsl.asyncHttpClient(Dsl.config().setThreadPoolName("graph-async-http").setIoThreadsCount(10));
 
-    public CompletableFuture<String> query(String url) {
+    private CompletableFuture<String> query(String url) {
         BoundRequestBuilder request = client.prepareGet(url);
         return request.execute().toCompletableFuture()
-                .thenApply(resp -> resp.getHeader("Date"))
+                .thenApply(resp -> {
+                    if (resp.getStatusCode() != 200) {
+                        log.warn("status:{}", resp.getStatusCode());
+                    }
+                    return resp.getHeader("Date");
+                })
                 .exceptionally(e -> {
                     log.error(e.getMessage());
                     return e.getMessage();
@@ -27,17 +32,6 @@ public class AsyncTask {
         return query.thenApply((taskVal) -> new NodeResult(taskName, taskVal, depends));
     }
 
-    public NodeResult sync(String taskName, String url, List<NodeResult> depends) {
-        CompletableFuture<String> taskCF = query(url);
-        String taskVal = null;
-        try {
-            taskVal = taskCF.get();
-        } catch (Exception e) {
-            taskVal = e.getMessage();
-        }
-        return new NodeResult(taskName, taskVal, depends);
-    }
-
     public void close() {
         try {
             client.close();
@@ -47,8 +41,13 @@ public class AsyncTask {
     }
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
-        String s = new AsyncTask().query("http://127.0.0.1:8080/sleep?timeout=1000").get();
-        log.info(s);
+        AsyncTask task = new AsyncTask();
+
+        task.async("test", "http://www.baidu.com", null).thenAccept(result -> {
+            log.info(result.toString());
+            task.close();
+        });
+
     }
 
 }

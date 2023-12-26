@@ -2,10 +2,12 @@ package org.qiyan.examples.rxjava;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class RxJavaGraph {
 
     public static void rxjavaFlow() {
@@ -43,7 +45,7 @@ public class RxJavaGraph {
 
         // 订阅并执行整个执行图
         nodeD.subscribe(result -> {
-            System.out.println("Final result: " + result);
+            log.info("Final result: " + result);
         });
 
         // 等待执行完成

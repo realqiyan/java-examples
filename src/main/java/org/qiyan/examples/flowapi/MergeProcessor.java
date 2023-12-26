@@ -34,7 +34,7 @@ public class MergeProcessor extends SubmissionPublisher implements Flow.Processo
     @Override
     public void onNext(Object item) {
         result.add(item);
-        //log.info("merge:{}/{}", result.size(), total);
+        log.info("merge:{}/{} result:{}", result.size(), total, item);
         if (result.size() == total) {
             submit(result);
         }
