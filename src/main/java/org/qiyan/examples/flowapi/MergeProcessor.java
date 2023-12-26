@@ -37,7 +37,7 @@ public class MergeProcessor extends SubmissionPublisher implements Flow.Processo
     public void onNext(Object item) {
         result.add(item);
         log.info("merge:{}/{} result:{}", result.size(), total, item);
-        if (result.size() == total && finish.compareAndExchange(false, true)) {
+        if (result.size() == total && finish.compareAndSet(false, true)) {
             submit(result);
         }
         subscription.request(Long.MAX_VALUE);
