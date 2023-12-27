@@ -18,17 +18,20 @@ public class RxJavaGraph {
 
     public void exec(String url) {
         AsyncTask task = new AsyncTask();
+        // init
+        task.async("init", url, null);
+        long start = System.currentTimeMillis();
 
         int times = 300;
         // a->(b1,b2,b3)->c
         Flowable.just(url)
                 .flatMap(input -> Flowable.fromFuture(task.async("a", input, null)))
                 .flatMap(input ->
-                        Flowable.range(1, times + 1)
+                        Flowable.range(1, times)
                                 .flatMap(
                                         idx -> Flowable.fromFuture(task.async("b-" + idx, url, List.of(input)))
                                                 .subscribeOn(Schedulers.io()), // 使用Schedulers.io()来并行执行
-                                        false, // 不保留顺序
+                                        false, // 异常是否直接终止
                                         times // 最大并发数
                                 )
                                 .toList() // 收集结果到List
@@ -38,13 +41,12 @@ public class RxJavaGraph {
                 .subscribe(
                         input -> {
                             task.close();
-                            log.info("final:" + input);
+                            log.info("final耗时:" + (System.currentTimeMillis() - start) + ",最终结果:" + input.getDepends().size());
                         },
                         error -> {
                             task.close();
                             log.error("Error occurred", error);
                         }
                 );
-
     }
 }
